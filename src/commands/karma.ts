@@ -1,6 +1,6 @@
-import type { KarmaEntry, User } from "../types.js";
-import { getLevel, getNextLevel, progressBar, KARMA_RULES } from "../karma.js";
-import { backToMenuKeyboard } from "./menu.js";
+import type { KarmaEntry, User } from "../types";
+import { getLevel, getNextLevel, progressBar, KARMA_RULES } from "../karma";
+import { backToMenuKeyboard } from "./menu";
 import type { InlineKeyboard } from "grammy";
 
 export function buildKarmaMessage(

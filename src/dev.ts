@@ -3,8 +3,8 @@
  * Run: pnpm dev
  */
 import "dotenv/config";
-import { bot } from "./bot.js";
-import { initDB } from "./db.js";
+import { bot } from "./bot";
+import { initDB } from "./db";
 
 async function main() {
   await initDB();

@@ -1,4 +1,4 @@
-import type { Loan } from "./types.js";
+import type { Loan } from "./types";
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 

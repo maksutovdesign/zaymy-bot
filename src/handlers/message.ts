@@ -2,11 +2,11 @@ import { Bot } from "grammy";
 import {
   getUser, getOrCreateUser, setState, clearState, getState,
   addLoan, addKarma, setUserName,
-} from "../db.js";
-import { parseAmount, parseTerm } from "../helpers.js";
-import { mainMenuKeyboard, rateKeyboard } from "../commands/menu.js";
-import { getAdvisorTip } from "../advisor.js";
-import type { ConversationState } from "../types.js";
+} from "../db";
+import { parseAmount, parseTerm } from "../helpers";
+import { mainMenuKeyboard, rateKeyboard } from "../commands/menu";
+import { getAdvisorTip } from "../advisor";
+import type { ConversationState } from "../types";
 
 export function registerMessageHandler(bot: Bot) {
   bot.on("message:text", async (ctx) => {

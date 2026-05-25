@@ -1,6 +1,6 @@
-import type { Loan } from "../types.js";
-import { formatAmount, loanLine } from "../helpers.js";
-import { loanActionKeyboard, backToMenuKeyboard } from "./menu.js";
+import type { Loan } from "../types";
+import { formatAmount, loanLine } from "../helpers";
+import { loanActionKeyboard, backToMenuKeyboard } from "./menu";
 import { InlineKeyboard } from "grammy";
 
 export function buildLoansMessage(loans: Loan[]): {
@@ -50,7 +50,6 @@ export function buildLoanDetailMessage(loan: Loan): {
   text: string;
   keyboard: InlineKeyboard;
 } {
-  const { loanLine } = require("../helpers.js");
   const text =
     `📄 <b>Детали займа</b>\n\n` +
     loanLine(loan, 1) +

@@ -1,16 +1,16 @@
 import { Bot } from "grammy";
 import {
-  getUser, getOrCreateUser, setState, clearState,
+  getUser, getOrCreateUser, setState, clearState, getState,
   addLoan, addKarma, getActiveLoans, getLoan,
   updateLoanStatus, getAllLoansForUser, getKarmaHistory,
-} from "../db.js";
-import { formatAmount } from "../helpers.js";
-import { mainMenuKeyboard, backToMenuKeyboard } from "../commands/menu.js";
-import { buildLoansMessage, buildLoanDetailMessage } from "../commands/loans.js";
-import { buildKarmaMessage } from "../commands/karma.js";
-import { buildStatsMessage } from "../commands/stats.js";
-import { getAdvisorTip } from "../advisor.js";
-import type { ConversationState } from "../types.js";
+} from "../db";
+import { formatAmount, loanLine, daysLeft } from "../helpers";
+import { mainMenuKeyboard, backToMenuKeyboard, loanActionKeyboard } from "../commands/menu";
+import { buildLoansMessage, buildLoanDetailMessage } from "../commands/loans";
+import { buildKarmaMessage } from "../commands/karma";
+import { buildStatsMessage } from "../commands/stats";
+import { getAdvisorTip } from "../advisor";
+import type { ConversationState } from "../types";
 
 export function registerCallbackHandler(bot: Bot) {
   bot.on("callback_query:data", async (ctx) => {
@@ -68,7 +68,7 @@ export function registerCallbackHandler(bot: Bot) {
     // ── Rate selection (give) ──────────────────────────────────────────────────
     if (data.startsWith("rate:give:")) {
       const rate = parseFloat(data.split(":")[2]);
-      const state = await import("../db.js").then((m) => m.getState(tgId));
+      const state = await getState(tgId);
 
       if (state.step !== "give:rate") {
         await ctx.answerCallbackQuery("Сначала начни создание займа");
@@ -97,7 +97,7 @@ export function registerCallbackHandler(bot: Bot) {
     // ── Rate selection (take) ──────────────────────────────────────────────────
     if (data.startsWith("rate:take:")) {
       const rate = parseFloat(data.split(":")[2]);
-      const state = await import("../db.js").then((m) => m.getState(tgId));
+      const state = await getState(tgId);
 
       if (state.step !== "take:rate") {
         await ctx.answerCallbackQuery("Сначала начни создание займа");
@@ -138,12 +138,11 @@ export function registerCallbackHandler(bot: Bot) {
         await ctx.answerCallbackQuery("Займ не найден");
         return;
       }
-      const { loanLine } = await import("../helpers.js");
       await ctx.editMessageText(
         `📄 <b>Займ</b>\n\n${loanLine(loan, 1)}\n\nЧто сделать?`,
         {
           parse_mode: "HTML",
-          reply_markup: (await import("../commands/menu.js")).loanActionKeyboard(loan.id, loan.type),
+          reply_markup: loanActionKeyboard(loan.id, loan.type),
         }
       );
       await ctx.answerCallbackQuery();
@@ -162,7 +161,6 @@ export function registerCallbackHandler(bot: Bot) {
       await updateLoanStatus(loanId, "returned");
 
       // Early or on-time return karma
-      const { daysLeft } = await import("../helpers.js");
       const days = daysLeft(loan.due_date);
       const isEarly = days > 0 && loan.type === "taken";
       const karmaPoints = isEarly ? 20 : 10;

@@ -1,8 +1,8 @@
 import { Bot } from "grammy";
-import { initDB } from "./db.js";
-import { registerMessageHandler } from "./handlers/message.js";
-import { registerCallbackHandler } from "./handlers/callback.js";
-import { mainMenuKeyboard } from "./commands/menu.js";
+import { initDB, clearState } from "./db";
+import { registerMessageHandler } from "./handlers/message";
+import { registerCallbackHandler } from "./handlers/callback";
+import { mainMenuKeyboard } from "./commands/menu";
 
 if (!process.env.BOT_TOKEN) {
   throw new Error("BOT_TOKEN is not set");
@@ -39,7 +39,6 @@ bot.command("menu", async (ctx) => {
 });
 
 bot.command("cancel", async (ctx) => {
-  const { clearState } = await import("./db.js");
   await clearState(ctx.from!.id);
   await ctx.reply("❌ Отменено.", { reply_markup: mainMenuKeyboard() });
 });

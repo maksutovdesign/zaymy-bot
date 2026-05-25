@@ -1,5 +1,5 @@
 import { createClient } from "@libsql/client";
-import type { ConversationState, KarmaEntry, Loan, User } from "./types.js";
+import type { ConversationState, KarmaEntry, Loan, User } from "./types";
 
 // Supports both local SQLite (file:./data.db) and Turso (libsql://...)
 export const db = createClient({

@@ -1,7 +1,7 @@
-import type { Loan, User } from "../types.js";
-import { formatAmount, daysLeft } from "../helpers.js";
-import { getLevel } from "../karma.js";
-import { backToMenuKeyboard } from "./menu.js";
+import type { Loan, User } from "../types";
+import { formatAmount, daysLeft } from "../helpers";
+import { getLevel } from "../karma";
+import { backToMenuKeyboard } from "./menu";
 import type { InlineKeyboard } from "grammy";
 
 export function buildStatsMessage(

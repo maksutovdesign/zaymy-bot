@@ -1,22 +1,24 @@
 /**
  * Vercel Cron Job — runs daily at 09:00 UTC.
- * Sends reminders for loans due tomorrow and marks overdue loans.
- * Protected by CRON_SECRET env var.
+ * Sends reminders for loans due tomorrow and penalises overdue loans.
  */
 import { Bot } from "grammy";
-import { initDB, getDueTomorrowLoans, getOverdueActiveLoans, addKarma } from "../src/db.js";
-import { formatAmount } from "../src/helpers.js";
-import { getAdvisorTip } from "../src/advisor.js";
+import { initDB, getDueTomorrowLoans, getOverdueActiveLoans, addKarma } from "../src/db";
+import { formatAmount } from "../src/helpers";
+import { getAdvisorTip } from "../src/advisor";
 
-export default async function handler(req: Request): Promise<Response> {
-  // Verify cron secret to prevent unauthorised calls
-  const secret = req.headers.get("authorization")?.replace("Bearer ", "");
+export default async function handler(req: any, res: any) {
+  const secret = (req.headers["authorization"] ?? "").replace("Bearer ", "");
   if (secret !== process.env.CRON_SECRET) {
-    return new Response("Unauthorized", { status: 401 });
+    res.status(401).json({ error: "Unauthorized" });
+    return;
   }
 
   const token = process.env.BOT_TOKEN;
-  if (!token) return new Response("BOT_TOKEN not set", { status: 500 });
+  if (!token) {
+    res.status(500).json({ error: "BOT_TOKEN not set" });
+    return;
+  }
 
   const bot = new Bot(token);
   await initDB();
@@ -39,7 +41,7 @@ export default async function handler(req: Request): Promise<Response> {
       );
       sent++;
     } catch (e) {
-      console.warn("[cron] Failed to notify", loan.tg_id, e);
+      console.warn("[cron] notify failed", loan.tg_id, e);
     }
   }
 
@@ -47,17 +49,13 @@ export default async function handler(req: Request): Promise<Response> {
   const overdue = await getOverdueActiveLoans();
   for (const loan of overdue) {
     try {
-      // Need user_id — get it from loan
       await addKarma(loan.user_id, -5, `Просрочка: ${loan.contact} (${formatAmount(loan.amount)})`);
       penalised++;
     } catch (e) {
-      console.warn("[cron] Failed to penalise karma for loan", loan.id, e);
+      console.warn("[cron] karma penalty failed", loan.id, e);
     }
   }
 
-  console.log(`[cron] done: sent=${sent}, karma_penalised=${penalised}`);
-  return new Response(JSON.stringify({ sent, penalised }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  console.log(`[cron] sent=${sent} penalised=${penalised}`);
+  res.status(200).json({ ok: true, sent, penalised });
 }

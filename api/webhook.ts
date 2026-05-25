@@ -1,16 +1,18 @@
 /**
- * Vercel serverless function — receives Telegram updates via webhook.
+ * Vercel Node.js Serverless Function — receives Telegram updates via webhook.
  */
-import { webhookCallback } from "grammy";
+import { bot } from "../src/bot";
 
-// Lazy-load bot to avoid issues with module caching between invocations
-export default async function handle(req: Request): Promise<Response> {
+export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
+    res.status(200).send("Bot is running");
+    return;
   }
-  const { bot } = await import("../src/bot.js");
-  const cb = webhookCallback(bot, "std/http");
-  return cb(req);
+  try {
+    await bot.handleUpdate(req.body);
+  } catch (e) {
+    console.error("[webhook]", e);
+  }
+  // Always respond 200 — Telegram retries on any other status
+  res.status(200).end();
 }
-
-export const config = { runtime: "edge" };
