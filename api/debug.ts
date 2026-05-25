@@ -4,7 +4,7 @@
 export default async function handler(req: any, res: any) {
   const checks: Record<string, string> = {
     BOT_TOKEN: process.env.BOT_TOKEN ? "SET (" + process.env.BOT_TOKEN.slice(0, 10) + "...)" : "MISSING",
-    DATABASE_URL: process.env.DATABASE_URL ? "SET" : "MISSING",
+    DATABASE_URL: process.env.DATABASE_URL ?? "MISSING",
     DATABASE_AUTH_TOKEN: process.env.DATABASE_AUTH_TOKEN ? "SET" : "MISSING",
     CRON_SECRET: process.env.CRON_SECRET ? "SET" : "MISSING",
     NODE_VERSION: process.version,
