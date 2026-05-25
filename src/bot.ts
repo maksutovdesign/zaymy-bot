@@ -1,5 +1,5 @@
 import { Bot } from "grammy";
-import { initDB, clearState } from "./db";
+import { clearState } from "./db";
 import { registerMessageHandler } from "./handlers/message";
 import { registerCallbackHandler } from "./handlers/callback";
 import { mainMenuKeyboard } from "./commands/menu";
@@ -13,16 +13,6 @@ export const bot = new Bot(process.env.BOT_TOKEN);
 // ── Global error handler ─────────────────────────────────────────────────────
 bot.catch((err) => {
   console.error("[bot] Unhandled error:", err.message, err.error);
-});
-
-// ── Initialize DB once ───────────────────────────────────────────────────────
-let dbReady = false;
-bot.use(async (_ctx, next) => {
-  if (!dbReady) {
-    await initDB();
-    dbReady = true;
-  }
-  await next();
 });
 
 // ── Commands ─────────────────────────────────────────────────────────────────

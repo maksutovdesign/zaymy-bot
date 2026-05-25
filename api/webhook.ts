@@ -15,13 +15,14 @@ export default async function handler(req: any, res: any) {
   try {
     if (!ready) {
       await initDB();
+      await bot.init(); // fetch bot info from Telegram once per instance
       ready = true;
     }
     await bot.handleUpdate(req.body);
   } catch (e: any) {
-    // Surface the error so we can see it during debugging
     console.error("[webhook] error:", e);
-    res.status(200).json({ ok: false, error: e?.message ?? String(e) });
+    // still return 200 so Telegram doesn't retry
+    res.status(200).end();
     return;
   }
 
