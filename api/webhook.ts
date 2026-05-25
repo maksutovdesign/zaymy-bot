@@ -1,27 +1,29 @@
 /**
  * Vercel Node.js Serverless Function — receives Telegram updates via webhook.
  */
+import { bot } from "../src/bot";
+import { initDB } from "../src/db";
+
+let ready = false;
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
-    res.status(200).send("Bot is running");
-    return;
-  }
-
-  let bot: any;
-  try {
-    const module = await import("../src/bot");
-    bot = module.bot;
-  } catch (e: any) {
-    console.error("[webhook] bot import failed:", e);
-    res.status(200).json({ error: "bot_import_failed", message: e.message, stack: e.stack });
+    res.status(200).send("Bot is running ✅");
     return;
   }
 
   try {
+    if (!ready) {
+      await initDB();
+      ready = true;
+    }
     await bot.handleUpdate(req.body);
   } catch (e: any) {
-    console.error("[webhook] handleUpdate failed:", e);
+    // Surface the error so we can see it during debugging
+    console.error("[webhook] error:", e);
+    res.status(200).json({ ok: false, error: e?.message ?? String(e) });
+    return;
   }
+
   res.status(200).end();
 }
