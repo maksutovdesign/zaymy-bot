@@ -1,0 +1,19 @@
+{
+  "name": "zaymy-bot",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/dev.ts",
+    "typecheck": "tsc --noEmit",
+    "setup-webhook": "tsx src/setup-webhook.ts"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "grammy": "^1.31.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "~5.9.2"
+  }
+}
