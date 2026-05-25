@@ -9,7 +9,7 @@ import { mainMenuKeyboard, backToMenuKeyboard, loanActionKeyboard } from "../com
 import { buildLoansMessage, buildLoanDetailMessage } from "../commands/loans";
 import { buildKarmaMessage } from "../commands/karma";
 import { buildStatsMessage } from "../commands/stats";
-import { getAdvisorTip } from "../advisor";
+import { getAdvisorTip, getRandomTips } from "../advisor";
 import type { ConversationState } from "../types";
 
 export function registerCallbackHandler(bot: Bot) {
@@ -218,16 +218,12 @@ export function registerCallbackHandler(bot: Bot) {
 
     // ── Advisor ────────────────────────────────────────────────────────────────
     if (data === "action:advisor") {
-      const tips = [
-        getAdvisorTip("give"),
-        getAdvisorTip("karma"),
-        getAdvisorTip("stats"),
-      ];
+      const tips = getRandomTips(3);
       await ctx.editMessageText(
         `🤖 <b>Советник</b>\n\n` + tips.join("\n\n"),
         { parse_mode: "HTML", reply_markup: backToMenuKeyboard() }
-      );
-      await ctx.answerCallbackQuery();
+      ).catch(() => {/* ignore "message not modified" if same tips rolled */});
+      await ctx.answerCallbackQuery("Новый совет 🎲");
       return;
     }
 
