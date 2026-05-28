@@ -3,7 +3,7 @@
  * Sends reminders for loans due tomorrow and penalises overdue loans.
  */
 import { Bot } from "grammy";
-import { initDB, getDueTomorrowLoans, getOverdueActiveLoans, addKarma } from "../src/db";
+import { initDB, getDueTomorrowLoans, getOverdueActiveLoans, addKarma, markLoanPenalizedToday } from "../src/db";
 import { formatAmount } from "../src/helpers";
 import { getAdvisorTip } from "../src/advisor";
 
@@ -45,11 +45,14 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // ── Penalise overdue loans (-5 karma/day) ──────────────────────────────────
+  // ── Penalise overdue loans (-5 karma/day, idempotent) ─────────────────────
+  // getOverdueActiveLoans() already filters out loans penalised today,
+  // so re-runs / retries within the same UTC day are safe.
   const overdue = await getOverdueActiveLoans();
   for (const loan of overdue) {
     try {
       await addKarma(loan.user_id, -5, `Просрочка: ${loan.contact} (${formatAmount(loan.amount)})`);
+      await markLoanPenalizedToday(loan.id);
       penalised++;
     } catch (e) {
       console.warn("[cron] karma penalty failed", loan.id, e);

@@ -23,20 +23,28 @@ export async function initDB(): Promise<void> {
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS loans (
-      id            INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id       INTEGER NOT NULL,
-      type          TEXT    NOT NULL CHECK(type IN ('given','taken')),
-      contact       TEXT    NOT NULL,
-      amount        REAL    NOT NULL,
-      term_days     INTEGER NOT NULL,
-      interest_rate REAL    NOT NULL DEFAULT 0,
-      status        TEXT    NOT NULL DEFAULT 'active'
-                    CHECK(status IN ('active','returned','overdue','written_off')),
-      due_date      TEXT    NOT NULL,
-      created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+      id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id             INTEGER NOT NULL,
+      type                TEXT    NOT NULL CHECK(type IN ('given','taken')),
+      contact             TEXT    NOT NULL,
+      amount              REAL    NOT NULL,
+      term_days           INTEGER NOT NULL,
+      interest_rate       REAL    NOT NULL DEFAULT 0,
+      status              TEXT    NOT NULL DEFAULT 'active'
+                          CHECK(status IN ('active','returned','overdue','written_off')),
+      due_date            TEXT    NOT NULL,
+      last_penalized_date TEXT,
+      created_at          TEXT    NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `);
+
+  // Migrate existing databases — add column if it doesn't exist yet
+  try {
+    await db.execute(`ALTER TABLE loans ADD COLUMN last_penalized_date TEXT`);
+  } catch {
+    // Column already exists — safe to ignore
+  }
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS karma_history (
@@ -160,9 +168,18 @@ export async function getOverdueActiveLoans(): Promise<(Loan & { tg_id: number }
     SELECT l.*, u.tg_id
     FROM loans l
     JOIN users u ON u.id = l.user_id
-    WHERE l.status = 'active' AND l.due_date < datetime('now')
+    WHERE l.status = 'active'
+      AND l.due_date < datetime('now')
+      AND (l.last_penalized_date IS NULL OR l.last_penalized_date != date('now'))
   `);
   return result.rows as unknown as (Loan & { tg_id: number })[];
+}
+
+export async function markLoanPenalizedToday(loanId: number): Promise<void> {
+  await db.execute({
+    sql: `UPDATE loans SET last_penalized_date = date('now') WHERE id = ?`,
+    args: [loanId],
+  });
 }
 
 export async function getDueTomorrowLoans(): Promise<(Loan & { tg_id: number; name: string })[]> {
